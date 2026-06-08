@@ -1,56 +1,99 @@
-# Welcome to your Expo app 👋
+# Aegis Mobile
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplicación móvil multiplataforma (iOS, Android, Web) construida con Expo SDK 56 y React Native.
 
-## Get started
+## Stack
 
-1. Install dependencies
+| Tecnología      | Versión                        |
+| --------------- | ------------------------------ |
+| Expo SDK        | 56                             |
+| Expo Router     | 56 (rutas tipadas, file-based) |
+| React           | 19 con React Compiler          |
+| React Native    | 0.85                           |
+| TypeScript      | 6 (strict mode)                |
+| Package manager | pnpm 11                        |
 
-   ```bash
-   pnpm install
-   ```
+**Librerías principales:**
 
-2. Start the app
+- `react-native-reanimated` v4 — animaciones
+- `react-native-gesture-handler` — gestures
+- `react-native-safe-area-context` — áreas seguras
+- `expo-image` — imágenes optimizadas
+- `@expo/ui` — primitivas de UI nativas
+- `expo-glass-effect` — efectos de cristal
 
-   ```bash
-   pnpm start
-   ```
+## Requisitos previos
 
-In the output, you'll find options to open the app in a
+- Node.js ≥ 18
+- pnpm 11 (`npm install -g pnpm@11`)
+- Para iOS: macOS con Xcode instalado
+- Para Android: Android Studio con un emulador configurado
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Instalación
 
 ```bash
-pnpm reset-project
+pnpm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Comandos
 
-### Other setup steps
+| Tarea                  | Comando              |
+| ---------------------- | -------------------- |
+| Servidor de desarrollo | `pnpm start`         |
+| Simulador iOS          | `pnpm ios`           |
+| Emulador Android       | `pnpm android`       |
+| Web                    | `pnpm web`           |
+| Lint                   | `pnpm lint`          |
+| Reset del proyecto     | `pnpm reset-project` |
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## Estructura del proyecto
 
-## Learn more
+```
+src/
+  app/            # Pantallas y layouts (Expo Router)
+  components/     # Componentes UI reutilizables
+  constants/      # Tokens de tema (colores, espaciado, fuentes)
+  hooks/          # Custom hooks
+assets/
+  images/         # Iconos, splash, favicon
+  expo.icon/      # Icono iOS
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+## Routing
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Este proyecto usa [Expo Router](https://docs.expo.dev/router/introduction/) con rutas basadas en archivos:
 
-## Join the community
+- Las pantallas viven bajo `src/app/`. El nombre del archivo define la ruta.
+- Los layouts se definen en `_layout.tsx`.
+- La navegación por tabs está en `src/components/app-tabs.tsx`.
+- Las rutas son **tipadas** — importar `Href` desde `expo-router` para navegar.
 
-Join our community of developers creating universal apps.
+## Convenciones
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- **Estilos:** siempre `StyleSheet.create`, nunca objetos inline. Usar tokens de `@/constants/theme`.
+- **Componentes:** un componente por archivo. Exports nombrados para componentes compartidos, default para pantallas.
+- **TypeScript:** sin `any`. Usar `unknown` con type narrowing.
+- **Memoización:** React Compiler la gestiona automáticamente — no agregar `memo`, `useCallback` ni `useMemo` manualmente.
+- **Imágenes:** usar `expo-image`, no el `Image` de React Native.
+- **SafeAreaView:** de `react-native-safe-area-context`, no de `react-native`.
+- **Diferencias de plataforma:** preferir archivos `.ios.tsx` / `.android.tsx` / `.web.tsx` sobre ramas `Platform.OS` cuando las implementaciones difieran significativamente.
+
+## Lint
+
+Ejecutar antes de cada commit:
+
+```bash
+pnpm lint
+```
+
+El proyecto sigue las reglas de `eslint-config-expo`: sin variables/imports sin usar, hooks solo en el nivel superior de componentes, `react-hooks/exhaustive-deps` activo.
+
+## Tema
+
+El tema soporta modo claro y oscuro de forma automática (`userInterfaceStyle: "automatic"`). Los tokens están en `src/constants/theme.ts`:
+
+- `Colors` — paleta light/dark
+- `Fonts` — familias tipográficas por plataforma
+- `Spacing` — escala de espaciado (half → six)
+- `MaxContentWidth` — ancho máximo de contenido (800 px)
+- `BottomTabInset` — inset inferior para tabs

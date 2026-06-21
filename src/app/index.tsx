@@ -64,7 +64,7 @@ function SOSProgressRing({
 }
 
 export default function HomeScreen() {
-  const { isAuthenticated, setAlertStartedAt } = useAppContext();
+  const { isAuthenticated, hasRegistered, setAlertStartedAt } = useAppContext();
 
   const holdProgress = useSharedValue(0);
   const [holdVisible, setHoldVisible] = useState(false);
@@ -127,8 +127,10 @@ export default function HomeScreen() {
     opacity: ring2Opacity.value,
   }));
 
+  if (hasRegistered === null) return null;
+
   if (!isAuthenticated) {
-    return <Redirect href="/welcome" />;
+    return <Redirect href={hasRegistered ? '/login' : '/welcome'} />;
   }
 
   function stopHold() {

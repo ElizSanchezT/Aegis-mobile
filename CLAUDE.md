@@ -67,6 +67,22 @@ Run `pnpm lint` (`expo lint`) before committing. The project follows `eslint-con
 - Use `expo-image` instead of the RN `Image` component.
 - Animations via `react-native-reanimated` (v4) and `react-native-gesture-handler`.
 
+## API Clients
+
+API clients live under `src/api/`, one file per backend controller:
+
+| File | Controller |
+|------|------------|
+| `src/api/alert.ts` | `alertApi` — create, end, fetch alerts |
+| `src/api/contact.ts` | `contactApi` — add, remove, toggle-alert, list contacts |
+| `src/api/user.ts` | `userApi` — register, login |
+
+All clients share the `request<T>` helper in `src/api/client.ts`, which reads the base URL from `EXPO_PUBLIC_API_URL` (falls back to `http://192.168.1.102:5043` for local dev). Set the variable in `.env` locally or via EAS Secrets / Expo web environment variables for other environments.
+
+- Import from the controller file directly: `import { alertApi } from '@/api/alert'`.
+- Pass typed request bodies — types are exported from each client file.
+- The generic `request<T>` lets callers supply an expected response type: `request<User>('/User/login', ...)`.
+
 ## Commands
 
 | Task             | Command              |

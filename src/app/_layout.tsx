@@ -10,6 +10,7 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="welcome"   options={{ animation: 'fade' }} />
         <Stack.Screen name="login"     options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="register"  options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="index"     options={{ animation: 'none' }} />
         <Stack.Screen name="contacts"  options={{ animation: 'none' }} />
         <Stack.Screen name="resources" options={{ animation: 'none' }} />

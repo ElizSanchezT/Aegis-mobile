@@ -21,7 +21,7 @@ export function Avatar({ name, color, kind, size = 48 }: AvatarProps) {
     );
   }
 
-  const initials = name.split(' ').slice(0, 2).map(s => s[0]).join('').toUpperCase();
+  const initials = (name || '').split(' ').slice(0, 2).map(s => s?.[0] ?? '').filter(Boolean).join('').toUpperCase() || '?';
   return (
     <View style={[styles.avatar, { width: size, height: size, borderRadius, backgroundColor: color }]}>
       <Text style={[styles.initials, { fontSize }]}>{initials}</Text>

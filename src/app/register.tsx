@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -27,26 +27,58 @@ function formatPhone(raw: string): string {
   ).trim();
 }
 
-export default function LoginScreen() {
-  const { setAuthenticated, setFirstName, setUserId } = useAppContext();
+export default function RegisterScreen() {
+  const { setAuthenticated, markRegistered, setFirstName, setUserId } = useAppContext();
+
+  const [firstName, setFirstNameField] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [dni, setDni] = useState('');
   const [phone, setPhone] = useState('');
   const [pin, setPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const phoneDigits = phone.replace(/\D/g, '');
-  const canSubmit = phoneDigits.length === 9 && pin.length === 6 && !loading;
+  const lastNameRef = useRef<TextInput>(null);
+  const dniRef = useRef<TextInput>(null);
+  const phoneRef = useRef<TextInput>(null);
+  const pinRef = useRef<TextInput>(null);
+  const confirmPinRef = useRef<TextInput>(null);
 
-  async function handleLogin() {
-    if (!canSubmit) return;
+  const phoneDigits = phone.replace(/\D/g, '');
+
+  const isValid =
+    firstName.trim().length > 0 &&
+    lastName.trim().length > 0 &&
+    dni.length === 8 &&
+    phoneDigits.length === 9 &&
+    pin.length === 6 &&
+    confirmPin.length === 6 &&
+    pin === confirmPin;
+
+  async function handleRegister() {
+    if (!isValid || loading) return;
+
+    if (pin !== confirmPin) {
+      Alert.alert('Error', 'Los PINs no coinciden.');
+      return;
+    }
+
     setLoading(true);
     try {
-      const res = await userApi.login({ phone: `+51${phoneDigits}`, pin });
-      if (res.firstName) await setFirstName(res.firstName);
+      const res = await userApi.register({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        phone: `+51${phoneDigits}`,
+        dni,
+        pin,
+      });
+      await setFirstName(firstName.trim());
       if (res.id) await setUserId(res.id);
+      await markRegistered();
       setAuthenticated(true);
       router.replace('/');
     } catch {
-      Alert.alert('Error', 'Teléfono o PIN incorrecto. Intenta nuevamente.');
+      Alert.alert('Error', 'No se pudo registrar. Verifica los datos e intenta nuevamente.');
     } finally {
       setLoading(false);
     }
@@ -66,10 +98,10 @@ export default function LoginScreen() {
           <View style={styles.halo} />
           <View style={styles.brand}>
             <View style={styles.logoWrap}>
-              <AegisLogo size={76} />
+              <AegisLogo size={64} />
             </View>
             <Text style={styles.brandName}>Aegis</Text>
-            <Text style={styles.brandTag}>Tu red de apoyo, siempre contigo</Text>
+            <Text style={styles.brandTag}>Crea tu cuenta para comenzar</Text>
           </View>
         </LinearGradient>
 
@@ -78,10 +110,57 @@ export default function LoginScreen() {
           contentContainerStyle={styles.sheetContent}
           keyboardShouldPersistTaps="handled"
           bounces={false}
+          showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.stepTitle}>Iniciar sesión</Text>
-          <Text style={styles.stepSub}>Ingresa tu teléfono y PIN para continuar.</Text>
+          <Text style={styles.stepTitle}>Crear cuenta</Text>
+          <Text style={styles.stepSub}>Todos los campos son obligatorios.</Text>
 
+          {/* Nombres */}
+          <Text style={styles.fieldLabel}>Nombres</Text>
+          <TextInput
+            style={[styles.input, styles.inputSpacing]}
+            placeholder="Ingresa tus nombres"
+            placeholderTextColor={Ink[300]}
+            value={firstName}
+            onChangeText={setFirstNameField}
+            returnKeyType="next"
+            onSubmitEditing={() => lastNameRef.current?.focus()}
+            autoCapitalize="words"
+          />
+
+          {/* Apellidos */}
+          <Text style={styles.fieldLabel}>Apellidos</Text>
+          <TextInput
+            ref={lastNameRef}
+            style={[styles.input, styles.inputSpacing]}
+            placeholder="Ingresa tus apellidos"
+            placeholderTextColor={Ink[300]}
+            value={lastName}
+            onChangeText={setLastName}
+            returnKeyType="next"
+            onSubmitEditing={() => dniRef.current?.focus()}
+            autoCapitalize="words"
+          />
+
+          {/* DNI */}
+          <Text style={styles.fieldLabel}>DNI</Text>
+          <TextInput
+            ref={dniRef}
+            style={[styles.input, styles.inputSpacing]}
+            placeholder="12345678"
+            placeholderTextColor={Ink[300]}
+            keyboardType="number-pad"
+            maxLength={8}
+            value={dni}
+            onChangeText={(t) => setDni(t.replace(/\D/g, '').slice(0, 8))}
+            returnKeyType="next"
+            onSubmitEditing={() => phoneRef.current?.focus()}
+          />
+          {dni.length > 0 && dni.length < 8 && (
+            <Text style={styles.hint}>El DNI debe tener 8 dígitos.</Text>
+          )}
+
+          {/* Teléfono */}
           <Text style={styles.fieldLabel}>Número de celular</Text>
           <View style={styles.phoneField}>
             <View style={styles.dial}>
@@ -89,6 +168,7 @@ export default function LoginScreen() {
               <Text style={styles.dialCode}>+51</Text>
             </View>
             <TextInput
+              ref={phoneRef}
               style={styles.phoneInput}
               keyboardType="number-pad"
               placeholder="987 654 321"
@@ -96,12 +176,18 @@ export default function LoginScreen() {
               value={phone}
               onChangeText={(t) => setPhone(formatPhone(t))}
               returnKeyType="next"
+              onSubmitEditing={() => pinRef.current?.focus()}
             />
           </View>
+          {phoneDigits.length > 0 && phoneDigits.length < 9 && (
+            <Text style={[styles.hint, styles.hintPhone]}>El teléfono debe tener 9 dígitos.</Text>
+          )}
 
-          <Text style={styles.fieldLabel}>PIN</Text>
+          {/* PIN */}
+          <Text style={styles.fieldLabel}>PIN (6 dígitos)</Text>
           <TextInput
-            style={[styles.input, styles.inputSpacing]}
+            ref={pinRef}
+            style={[styles.input, styles.inputPin, styles.inputSpacing]}
             keyboardType="number-pad"
             placeholder="••••••"
             placeholderTextColor={Ink[300]}
@@ -109,29 +195,53 @@ export default function LoginScreen() {
             maxLength={6}
             value={pin}
             onChangeText={(t) => setPin(t.replace(/\D/g, '').slice(0, 6))}
-            onSubmitEditing={handleLogin}
-            returnKeyType="done"
+            returnKeyType="next"
+            onSubmitEditing={() => confirmPinRef.current?.focus()}
           />
 
+          {/* Confirmar PIN */}
+          <Text style={styles.fieldLabel}>Confirmar PIN</Text>
+          <TextInput
+            ref={confirmPinRef}
+            style={[
+              styles.input,
+              styles.inputPin,
+              styles.inputSpacing,
+              confirmPin.length === 6 && pin !== confirmPin && styles.inputError,
+            ]}
+            keyboardType="number-pad"
+            placeholder="••••••"
+            placeholderTextColor={Ink[300]}
+            secureTextEntry
+            maxLength={6}
+            value={confirmPin}
+            onChangeText={(t) => setConfirmPin(t.replace(/\D/g, '').slice(0, 6))}
+            returnKeyType="done"
+            onSubmitEditing={handleRegister}
+          />
+          {confirmPin.length === 6 && pin !== confirmPin && (
+            <Text style={styles.errorText}>Los PINs no coinciden.</Text>
+          )}
+
           <TouchableOpacity
-            style={[styles.cta, !canSubmit && styles.ctaDisabled]}
-            onPress={handleLogin}
-            disabled={!canSubmit}
+            style={[styles.cta, (!isValid || loading) && styles.ctaDisabled]}
+            onPress={handleRegister}
+            disabled={!isValid || loading}
             activeOpacity={0.88}
           >
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={[styles.ctaText, !canSubmit && styles.ctaTextDisabled]}>
-                Ingresar
+              <Text style={[styles.ctaText, !isValid && styles.ctaTextDisabled]}>
+                Crear cuenta
               </Text>
             )}
           </TouchableOpacity>
 
-          <View style={styles.registerRow}>
-            <Text style={styles.registerNote}>¿Primera vez en Aegis?</Text>
-            <TouchableOpacity onPress={() => router.push('/register')} hitSlop={8}>
-              <Text style={styles.registerLink}> Regístrate aquí</Text>
+          <View style={styles.loginRow}>
+            <Text style={styles.loginNote}>¿Ya tienes cuenta?</Text>
+            <TouchableOpacity onPress={() => router.push('/login')} hitSlop={8}>
+              <Text style={styles.loginLink}> Inicia sesión</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -151,7 +261,7 @@ const styles = StyleSheet.create({
   hero: {
     paddingTop: 14,
     paddingHorizontal: 24,
-    paddingBottom: 64,
+    paddingBottom: 56,
     position: 'relative',
     overflow: 'hidden',
   },
@@ -166,10 +276,10 @@ const styles = StyleSheet.create({
   },
   brand: {
     alignItems: 'center',
-    marginTop: 40,
+    marginTop: 28,
   },
   logoWrap: {
-    marginBottom: 12,
+    marginBottom: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.32,
@@ -183,7 +293,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   brandTag: {
-    fontSize: 14.5,
+    fontSize: 14,
     color: 'rgba(255,255,255,0.85)',
     marginTop: 6,
   },
@@ -220,10 +330,31 @@ const styles = StyleSheet.create({
     color: Ink[500],
     marginBottom: 8,
   },
+  input: {
+    height: 56,
+    borderWidth: 1.5,
+    borderColor: Line,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    color: Ink[900],
+    backgroundColor: '#fff',
+  },
+  inputPin: {
+    fontSize: 22,
+    fontWeight: '600',
+    letterSpacing: 4,
+  },
+  inputSpacing: {
+    marginBottom: 20,
+  },
+  inputError: {
+    borderColor: '#ef4a64',
+  },
   phoneField: {
     flexDirection: 'row',
     gap: 8,
-    marginBottom: 20,
+    marginBottom: 8,
   },
   dial: {
     flexDirection: 'row',
@@ -257,20 +388,20 @@ const styles = StyleSheet.create({
     color: Ink[900],
     backgroundColor: '#fff',
   },
-  input: {
-    height: 56,
-    borderWidth: 1.5,
-    borderColor: Line,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    fontSize: 22,
-    fontWeight: '600',
-    letterSpacing: 4,
-    color: Ink[900],
-    backgroundColor: '#fff',
+  hint: {
+    fontSize: 12,
+    color: Ink[400],
+    marginTop: -14,
+    marginBottom: 16,
   },
-  inputSpacing: {
-    marginBottom: 24,
+  hintPhone: {
+    marginBottom: 20,
+  },
+  errorText: {
+    fontSize: 12,
+    color: '#ef4a64',
+    marginTop: -14,
+    marginBottom: 16,
   },
   cta: {
     width: '100%',
@@ -284,6 +415,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.6,
     shadowRadius: 26,
     elevation: 6,
+    marginTop: 4,
   },
   ctaDisabled: {
     backgroundColor: Ink[200],
@@ -298,17 +430,17 @@ const styles = StyleSheet.create({
   ctaTextDisabled: {
     color: Ink[400],
   },
-  registerRow: {
+  loginRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 20,
   },
-  registerNote: {
+  loginNote: {
     fontSize: 13.5,
     color: Ink[500],
   },
-  registerLink: {
+  loginLink: {
     fontSize: 13.5,
     fontWeight: '600',
     color: Brand[600],

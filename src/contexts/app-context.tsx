@@ -17,6 +17,8 @@ type AppContextValue = {
   logout: () => void;
   alertStartedAt: number | null;
   setAlertStartedAt: (t: number | null) => void;
+  alertId: number | null;
+  setAlertId: (id: number | null) => void;
   resolvedDuration: number | null;
   setResolvedDuration: (d: number | null) => void;
 };
@@ -29,6 +31,7 @@ export function AppContextProvider({ children }: { children: React.ReactNode }) 
   const [firstName, setFirstNameState] = useState('');
   const [userId, setUserIdState] = useState<number | null>(null);
   const [alertStartedAt, setAlertStartedAt] = useState<number | null>(null);
+  const [alertId, setAlertId] = useState<number | null>(null);
   const [resolvedDuration, setResolvedDuration] = useState<number | null>(null);
 
   useEffect(() => {
@@ -70,6 +73,7 @@ export function AppContextProvider({ children }: { children: React.ReactNode }) 
       userId, setUserId,
       logout,
       alertStartedAt, setAlertStartedAt,
+      alertId, setAlertId,
       resolvedDuration, setResolvedDuration,
     }}>
       {children}

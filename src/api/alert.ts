@@ -12,6 +12,10 @@ export type EndAlertRequest = {
   endedAt: string;
 };
 
+export type AlertResponse = {
+  id: number;
+};
+
 export const alertApi = {
   getAll: () =>
     request('/Alert'),
@@ -20,7 +24,7 @@ export const alertApi = {
     request(`/Alert/${id}`),
 
   create: (body: CreateAlertCommand) =>
-    request('/Alert', {
+    request<AlertResponse>('/Alert', {
       method: 'POST',
       body: JSON.stringify(body),
     }),

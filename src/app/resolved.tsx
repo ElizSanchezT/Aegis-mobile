@@ -1,5 +1,6 @@
+import { contactApi, type ApiContact } from '@/api/contact';
 import { router } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
@@ -15,10 +16,20 @@ function fmtDuration(s: number) {
   return `${m} min ${ss}s`;
 }
 
+const AVATAR_COLORS = ['#6c47d4', '#2563eb', '#059669', '#d97706', '#dc2626'];
+
 export default function ResolvedScreen() {
-  const { contacts, resolvedDuration } = useAppContext();
-  const active = contacts.filter(c => c.on);
+  const { userId, resolvedDuration } = useAppContext();
+  const [active, setActive] = useState<ApiContact[]>([]);
   const duration = resolvedDuration ?? 0;
+
+  useEffect(() => {
+    if (!userId) return;
+    contactApi.getByUser(userId)
+      .then(all => setActive(all.filter(c => c.alertEnabled)))
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const checkScale = useSharedValue(0.5);
   const checkOpacity = useSharedValue(0);
@@ -75,9 +86,9 @@ export default function ResolvedScreen() {
         {/* Notified contacts */}
         <Text style={styles.notifiedHeader}>Notificados ({active.length})</Text>
         <View style={styles.pills}>
-          {active.map(c => (
+          {active.map((c, i) => (
             <View key={c.id} style={styles.pill}>
-              <Avatar name={c.name} color={c.color} kind={c.kind} size={24} />
+              <Avatar name={c.name} color={AVATAR_COLORS[i % AVATAR_COLORS.length]} kind="person" size={24} />
               <Text style={styles.pillName}>{c.name.split(' ')[0]}</Text>
               <Text style={styles.pillAck}>✓</Text>
             </View>

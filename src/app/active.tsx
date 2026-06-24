@@ -4,8 +4,9 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 
 import { SubHeader } from '@/components/aegis/app-header';
-import { StylizedMap } from '@/components/aegis/stylized-map';
+import { LiveMap } from '@/components/aegis/live-map';
 import { IconCamera, IconCenterLoc, IconClose, IconMic, IconNote, IconShare, IconShield } from '@/components/aegis/icons';
+import { alertApi } from '@/api/alert';
 import { useAppContext } from '@/contexts/app-context';
 import { Brand, Canvas, Ink, Line, Shadow, SOS } from '@/constants/theme';
 
@@ -17,7 +18,7 @@ function fmt(s: number) {
 }
 
 export default function ActiveAlertScreen() {
-  const { alertStartedAt, setResolvedDuration } = useAppContext();
+  const { alertStartedAt, alertId, setResolvedDuration } = useAppContext();
   const startedAt = alertStartedAt ?? 0;
 
   const [elapsed, setElapsed] = useState(0);
@@ -49,7 +50,14 @@ export default function ActiveAlertScreen() {
     boxShadow: `0 0 0 ${dotScale.value}px rgba(239,74,100,0)`,
   }));
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
+    if (alertId != null) {
+      try {
+        await alertApi.end(alertId, { endedAt: new Date().toISOString() });
+      } catch (e) {
+        console.error('End alert error:', e);
+      }
+    }
     setResolvedDuration(elapsed);
     router.replace('/resolved');
   };
@@ -77,7 +85,7 @@ export default function ActiveAlertScreen() {
         <View style={styles.sectionBlock}>
           <Text style={styles.sectionTitle}>Ubicación en tiempo real</Text>
           <View style={styles.mapCard}>
-            <StylizedMap />
+            <LiveMap />
             <View style={styles.mapCtrls}>
               <Pressable style={styles.ctrlBtn} accessibilityLabel="Centrar">
                 <IconCenterLoc size={18} color={Brand[600]} />

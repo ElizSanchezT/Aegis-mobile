@@ -1,4 +1,6 @@
+import * as Location from "expo-location";
 import { Redirect, router } from "expo-router";
+import * as SMS from "expo-sms";
 import { useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, {
@@ -13,6 +15,8 @@ import Animated, {
 } from "react-native-reanimated";
 import Svg, { Circle } from "react-native-svg";
 
+import { alertApi } from "@/api/alert";
+import { contactApi } from "@/api/contact";
 import { HomeHeader } from "@/components/aegis/app-header";
 import { HoldOverlay } from "@/components/aegis/hold-overlay";
 import { HomeIllustration } from "@/components/aegis/home-illustration";
@@ -64,7 +68,7 @@ function SOSProgressRing({
 }
 
 export default function HomeScreen() {
-  const { isAuthenticated, hasRegistered, setAlertStartedAt } = useAppContext();
+  const { isAuthenticated, hasRegistered, userId, firstName, setAlertStartedAt, setAlertId } = useAppContext();
 
   const holdProgress = useSharedValue(0);
   const [holdVisible, setHoldVisible] = useState(false);
@@ -145,8 +149,65 @@ export default function HomeScreen() {
   }
 
   function handleSOSFired() {
+    // eslint-disable-next-line react-hooks/purity
     setAlertStartedAt(Date.now());
     router.push("/active");
+    void triggerAlertFlow();
+  }
+
+  async function triggerAlertFlow() {
+    if (!userId) return;
+
+    // Fetch location and contacts in parallel
+    const [locSettled, contactsSettled] = await Promise.allSettled([
+      (async () => {
+        const { status } = await Location.getForegroundPermissionsAsync();
+        if (status !== "granted") return null;
+        return Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      })(),
+      contactApi.getByUser(userId),
+    ]);
+
+    const loc = locSettled.status === "fulfilled" ? locSettled.value : null;
+    const latitude = loc?.coords.latitude ?? 0;
+    const longitude = loc?.coords.longitude ?? 0;
+    const precision = loc?.coords.accuracy ?? 0;
+
+    // Create alert in background — don't block SMS on it
+    alertApi
+      .create({
+        triggeredById: userId,
+        triggeredAt: new Date().toISOString(),
+        latitude,
+        longitude,
+        precision,
+      })
+      .then((res) => setAlertId(res.id))
+      .catch((e) => console.error("Create alert error:", e));
+
+    // Send SMS independently of the alert API result
+    if (contactsSettled.status === "fulfilled") {
+      const phones = contactsSettled.value
+        .filter((c) => c.alertEnabled && c.phone)
+        .map((c) => c.phone as string);
+      if (phones.length > 0) {
+        try {
+          if (await SMS.isAvailableAsync()) {
+            const name = firstName || "Tu contacto";
+            const locPart =
+              latitude !== 0 || longitude !== 0
+                ? `Ubicación: https://maps.google.com/maps?q=${latitude},${longitude}`
+                : "Ubicación no disponible.";
+            await SMS.sendSMSAsync(
+              phones,
+              `🚨 ALERTA SOS: ${name} ha activado una emergencia. ${locPart}`,
+            );
+          }
+        } catch (e) {
+          console.error("SMS error:", e);
+        }
+      }
+    }
   }
 
   function startHold() {

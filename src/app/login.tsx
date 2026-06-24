@@ -1,9 +1,12 @@
+import * as Location from 'expo-location';
 import { router } from 'expo-router';
+import * as SMS from 'expo-sms';
 import { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   ScrollView,
   StyleSheet,
@@ -36,6 +39,42 @@ export default function LoginScreen() {
   const phoneDigits = phone.replace(/\D/g, '');
   const canSubmit = phoneDigits.length === 9 && pin.length === 6 && !loading;
 
+  async function requestAppPermissions() {
+    const servicesEnabled = await Location.hasServicesEnabledAsync();
+    if (!servicesEnabled) {
+      Alert.alert(
+        'GPS desactivado',
+        'Aegis necesita el GPS para compartir tu ubicación en emergencias. Por favor actívalo en los ajustes.',
+        [
+          { text: 'Ahora no', style: 'cancel' },
+          {
+            text: 'Abrir ajustes',
+            onPress: () => {
+              if (Platform.OS === 'android') {
+                Linking.sendIntent('android.settings.LOCATION_SOURCE_SETTINGS').catch(() =>
+                  Linking.openSettings(),
+                );
+              } else {
+                Linking.openSettings();
+              }
+            },
+          },
+        ],
+      );
+      return;
+    }
+
+    await Location.requestForegroundPermissionsAsync();
+
+    const smsAvailable = await SMS.isAvailableAsync();
+    if (!smsAvailable) {
+      Alert.alert(
+        'SMS no disponible',
+        'Tu dispositivo no puede enviar SMS. Las alertas notificarán a tus contactos por otras vías.',
+      );
+    }
+  }
+
   async function handleLogin() {
     if (!canSubmit) return;
     setLoading(true);
@@ -44,6 +83,7 @@ export default function LoginScreen() {
       if (res.firstName) await setFirstName(res.firstName);
       if (res.id) await setUserId(res.id);
       setAuthenticated(true);
+      await requestAppPermissions();
       router.replace('/');
     } catch {
       Alert.alert('Error', 'Teléfono o PIN incorrecto. Intenta nuevamente.');

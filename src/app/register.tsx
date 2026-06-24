@@ -1,9 +1,12 @@
+import * as Location from 'expo-location';
 import { router } from 'expo-router';
+import * as SMS from 'expo-sms';
 import { useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   ScrollView,
   StyleSheet,
@@ -55,6 +58,42 @@ export default function RegisterScreen() {
     confirmPin.length === 6 &&
     pin === confirmPin;
 
+  async function requestAppPermissions() {
+    const servicesEnabled = await Location.hasServicesEnabledAsync();
+    if (!servicesEnabled) {
+      Alert.alert(
+        'GPS desactivado',
+        'Aegis necesita el GPS para compartir tu ubicación en emergencias. Por favor actívalo en los ajustes.',
+        [
+          { text: 'Ahora no', style: 'cancel' },
+          {
+            text: 'Abrir ajustes',
+            onPress: () => {
+              if (Platform.OS === 'android') {
+                Linking.sendIntent('android.settings.LOCATION_SOURCE_SETTINGS').catch(() =>
+                  Linking.openSettings(),
+                );
+              } else {
+                Linking.openSettings();
+              }
+            },
+          },
+        ],
+      );
+      return;
+    }
+
+    await Location.requestForegroundPermissionsAsync();
+
+    const smsAvailable = await SMS.isAvailableAsync();
+    if (!smsAvailable) {
+      Alert.alert(
+        'SMS no disponible',
+        'Tu dispositivo no puede enviar SMS. Las alertas notificarán a tus contactos por otras vías.',
+      );
+    }
+  }
+
   async function handleRegister() {
     if (!isValid || loading) return;
 
@@ -76,6 +115,7 @@ export default function RegisterScreen() {
       if (res.id) await setUserId(res.id);
       await markRegistered();
       setAuthenticated(true);
+      await requestAppPermissions();
       router.replace('/');
     } catch {
       Alert.alert('Error', 'No se pudo registrar. Verifica los datos e intenta nuevamente.');

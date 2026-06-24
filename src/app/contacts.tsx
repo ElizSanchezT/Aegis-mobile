@@ -33,11 +33,6 @@ export default function ContactsScreen() {
   const [pendingContact, setPendingContact] = useState<{ name: string; phone: string | null } | null>(null);
   const [alias, setAlias] = useState('');
 
-  useEffect(() => {
-    fetchContacts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId]);
-
   async function fetchContacts() {
     if (!userId) { setLoading(false); return; }
     try {
@@ -49,6 +44,12 @@ export default function ContactsScreen() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchContacts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   async function handleAdd() {
     if (contacts.length >= MAX_CONTACTS) {

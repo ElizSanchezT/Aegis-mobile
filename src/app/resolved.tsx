@@ -26,7 +26,7 @@ export default function ResolvedScreen() {
   useEffect(() => {
     if (!userId) return;
     contactApi.getByUser(userId)
-      .then(all => setActive(all.filter(c => c.alertEnabled)))
+      .then(all => setActive(all.filter(c => c.receivesAlert)))
       .catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

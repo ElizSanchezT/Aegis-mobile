@@ -7,7 +7,7 @@
 - **Expo SDK 56** + **Expo Router 56** (file-based routing, typed routes)
 - **React 19** with React Compiler enabled — no manual `memo`/`useCallback`/`useMemo`
 - **TypeScript** strict mode
-- **pnpm** — always use `pnpm`, never `npm` or `yarn`
+- **yarn** — always use `yarn`, never `npm` or `pnpm`
 - Path alias `@/*` → `src/*`
 
 ## Project Structure
@@ -48,7 +48,7 @@ assets/         # Images, fonts, icons
 
 ## ESLint
 
-Run `pnpm lint` (`expo lint`) before committing. The project follows `eslint-config-expo` rules:
+Run `yarn lint` (`expo lint`) before committing. The project follows `eslint-config-expo` rules:
 
 - No unused variables or imports — remove them, do not comment out.
 - React hooks rules apply: call hooks only at the top level of function components.
@@ -87,9 +87,9 @@ All clients share the `request<T>` helper in `src/api/client.ts`, which reads th
 
 | Task             | Command              |
 | ---------------- | -------------------- |
-| Start dev server | `pnpm start`         |
-| iOS simulator    | `pnpm ios`           |
-| Android emulator | `pnpm android`       |
-| Web              | `pnpm web`           |
-| Lint             | `pnpm lint`          |
-| Reset project    | `pnpm reset-project` |
+| Start dev server | `yarn start`         |
+| iOS simulator    | `yarn ios`           |
+| Android emulator | `yarn android`       |
+| Web              | `yarn web`           |
+| Lint             | `yarn lint`          |
+| Reset project    | `yarn reset-project` |

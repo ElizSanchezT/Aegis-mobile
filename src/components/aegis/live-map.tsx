@@ -74,7 +74,7 @@ export function LiveMap() {
     <MapView
       ref={mapRef}
       provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
-      style={StyleSheet.absoluteFillObject}
+      style={styles.map}
       initialRegion={{ ...coords, latitudeDelta: DELTA, longitudeDelta: DELTA }}
     >
       <Marker coordinate={coords} pinColor="#ef4a64" />
@@ -90,8 +90,13 @@ export function LiveMap() {
 }
 
 const styles = StyleSheet.create({
+  map: {
+    flex: 1,
+    width: '100%',
+  },
   placeholder: {
-    ...StyleSheet.absoluteFillObject,
+    flex: 1,
+    width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#eef0f3',

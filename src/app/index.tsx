@@ -1,8 +1,13 @@
 import * as Location from "expo-location";
 import { Redirect, router } from "expo-router";
-import * as SMS from "expo-sms";
 import { useEffect, useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import Animated, {
   cancelAnimation,
   SharedValue,
@@ -68,7 +73,14 @@ function SOSProgressRing({
 }
 
 export default function HomeScreen() {
-  const { isAuthenticated, hasRegistered, userId, firstName, setAlertStartedAt, setAlertId } = useAppContext();
+  const {
+    isAuthenticated,
+    hasRegistered,
+    userId,
+    firstName,
+    setAlertStartedAt,
+    setAlertId,
+  } = useAppContext();
 
   const holdProgress = useSharedValue(0);
   const [holdVisible, setHoldVisible] = useState(false);
@@ -134,7 +146,7 @@ export default function HomeScreen() {
   if (hasRegistered === null) return null;
 
   if (!isAuthenticated) {
-    return <Redirect href={hasRegistered ? '/login' : '/welcome'} />;
+    return <Redirect href={hasRegistered ? "/login" : "/welcome"} />;
   }
 
   function stopHold() {
@@ -163,7 +175,9 @@ export default function HomeScreen() {
       (async () => {
         const { status } = await Location.getForegroundPermissionsAsync();
         if (status !== "granted") return null;
-        return Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        return Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
       })(),
       contactApi.getByUser(userId),
     ]);
@@ -182,32 +196,34 @@ export default function HomeScreen() {
         longitude,
         precision,
       })
-      .then((res) => setAlertId(res.id))
+      .then((res) => {
+        setAlertId(res.id);
+      })
       .catch((e) => console.error("Create alert error:", e));
 
     // Send SMS independently of the alert API result
-    if (contactsSettled.status === "fulfilled") {
-      const phones = contactsSettled.value
-        .filter((c) => c.alertEnabled && c.phone)
-        .map((c) => c.phone as string);
-      if (phones.length > 0) {
-        try {
-          if (await SMS.isAvailableAsync()) {
-            const name = firstName || "Tu contacto";
-            const locPart =
-              latitude !== 0 || longitude !== 0
-                ? `Ubicación: https://maps.google.com/maps?q=${latitude},${longitude}`
-                : "Ubicación no disponible.";
-            await SMS.sendSMSAsync(
-              phones,
-              `🚨 ALERTA SOS: ${name} ha activado una emergencia. ${locPart}`,
-            );
-          }
-        } catch (e) {
-          console.error("SMS error:", e);
-        }
-      }
-    }
+    // if (contactsSettled.status === "fulfilled") {
+    //   const phones = contactsSettled.value
+    //     .filter((c) => c.receivesAlert && c.phone)
+    //     .map((c) => c.phone as string);
+    //   if (phones.length > 0) {
+    //     try {
+    //       if (await SMS.isAvailableAsync()) {
+    //         const name = firstName || "Tu contacto";
+    //         const locPart =
+    //           latitude !== 0 || longitude !== 0
+    //             ? `Ubicación: https://maps.google.com/maps?q=${latitude},${longitude}`
+    //             : "Ubicación no disponible.";
+    //         await SMS.sendSMSAsync(
+    //           phones,
+    //           `🚨 ALERTA SOS: ${name} ha activado una emergencia. ${locPart}`,
+    //         );
+    //       }
+    //     } catch (e) {
+    //       console.error("SMS error:", e);
+    //     }
+    //   }
+    // }
   }
 
   function startHold() {

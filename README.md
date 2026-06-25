@@ -11,7 +11,7 @@ Aplicación móvil multiplataforma (iOS, Android, Web) construida con Expo SDK 5
 | React           | 19 con React Compiler          |
 | React Native    | 0.85                           |
 | TypeScript      | 6 (strict mode)                |
-| Package manager | pnpm 11                        |
+| Package manager | yarn 1                         |
 
 **Librerías principales:**
 
@@ -25,26 +25,26 @@ Aplicación móvil multiplataforma (iOS, Android, Web) construida con Expo SDK 5
 ## Requisitos previos
 
 - Node.js ≥ 18
-- pnpm 11 (`npm install -g pnpm@11`)
+- yarn 1 (`npm install -g yarn`)
 - Para iOS: macOS con Xcode instalado
 - Para Android: Android Studio con un emulador configurado
 
 ## Instalación
 
 ```bash
-pnpm install
+yarn install
 ```
 
 ## Comandos
 
 | Tarea                  | Comando              |
 | ---------------------- | -------------------- |
-| Servidor de desarrollo | `pnpm start`         |
-| Simulador iOS          | `pnpm ios`           |
-| Emulador Android       | `pnpm android`       |
-| Web                    | `pnpm web`           |
-| Lint                   | `pnpm lint`          |
-| Reset del proyecto     | `pnpm reset-project` |
+| Servidor de desarrollo | `yarn start`         |
+| Simulador iOS          | `yarn ios`           |
+| Emulador Android       | `yarn android`       |
+| Web                    | `yarn web`           |
+| Lint                   | `yarn lint`          |
+| Reset del proyecto     | `yarn reset-project` |
 
 ## Estructura del proyecto
 
@@ -83,7 +83,7 @@ Este proyecto usa [Expo Router](https://docs.expo.dev/router/introduction/) con 
 Ejecutar antes de cada commit:
 
 ```bash
-pnpm lint
+yarn lint
 ```
 
 El proyecto sigue las reglas de `eslint-config-expo`: sin variables/imports sin usar, hooks solo en el nivel superior de componentes, `react-hooks/exhaustive-deps` activo.

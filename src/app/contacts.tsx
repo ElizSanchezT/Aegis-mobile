@@ -86,7 +86,7 @@ export default function ContactsScreen() {
         phone: pendingContact.phone,
         alias: pickedAlias || null,
       });
-      setContacts(prev => [...prev, { ...created, alertEnabled: true }]);
+      setContacts(prev => [...prev, { ...created, receivesAlert: created.receivesAlert ?? true }]);
     } catch {
       Alert.alert('Error', 'No se pudo agregar el contacto.');
     }
@@ -94,13 +94,13 @@ export default function ContactsScreen() {
 
   async function handleToggle(contact: ApiContact) {
     if (!userId) return;
-    const flipped = !contact.alertEnabled;
-    setContacts(prev => prev.map(c => c.id === contact.id ? { ...c, alertEnabled: flipped } : c));
+    const flipped = !contact.receivesAlert;
+    setContacts(prev => prev.map(c => c.id === contact.id ? { ...c, receivesAlert: flipped } : c));
     try {
       const updated = await contactApi.toggleAlert(contact.id, userId);
-      setContacts(prev => prev.map(c => c.id === contact.id ? { ...c, ...updated, alertEnabled: updated.alertEnabled ?? flipped } : c));
+      setContacts(prev => prev.map(c => c.id === contact.id ? { ...c, ...updated } : c));
     } catch {
-      setContacts(prev => prev.map(c => c.id === contact.id ? { ...c, alertEnabled: contact.alertEnabled } : c));
+      setContacts(prev => prev.map(c => c.id === contact.id ? { ...c, receivesAlert: contact.receivesAlert } : c));
       Alert.alert('Error', 'No se pudo actualizar el contacto.');
     }
   }
@@ -250,9 +250,9 @@ function ContactCard({ contact: c, color, onToggle, onDelete }: ContactCardProps
         {c.alias ? <Text style={styles.rel}>{c.alias}</Text> : null}
         {c.phone ? <Text style={styles.phone}>{c.phone}</Text> : null}
         <View style={styles.tagRow}>
-          <View style={[styles.tag, c.alertEnabled ? styles.tagOn : styles.tagOff]}>
-            <Text style={[styles.tagText, c.alertEnabled ? styles.tagTextOn : styles.tagTextOff]}>
-              {c.alertEnabled ? 'Recibirá alerta' : 'No recibirá'}
+          <View style={[styles.tag, c.receivesAlert ? styles.tagOn : styles.tagOff]}>
+            <Text style={[styles.tagText, c.receivesAlert ? styles.tagTextOn : styles.tagTextOff]}>
+              {c.receivesAlert ? 'Recibirá alerta' : 'No recibirá'}
             </Text>
           </View>
         </View>
@@ -260,13 +260,13 @@ function ContactCard({ contact: c, color, onToggle, onDelete }: ContactCardProps
 
       <View style={styles.actions}>
         <Pressable
-          style={[styles.switchTrack, c.alertEnabled && styles.switchOn]}
+          style={[styles.switchTrack, c.receivesAlert && styles.switchOn]}
           onPress={() => onToggle(c)}
-          accessibilityLabel={`${c.alertEnabled ? 'Desactivar' : 'Activar'} ${c.name}`}
+          accessibilityLabel={`${c.receivesAlert ? 'Desactivar' : 'Activar'} ${c.name}`}
           accessibilityRole="switch"
-          accessibilityState={{ checked: c.alertEnabled }}
+          accessibilityState={{ checked: c.receivesAlert }}
         >
-          <View style={[styles.switchThumb, c.alertEnabled && styles.switchThumbOn]} />
+          <View style={[styles.switchThumb, c.receivesAlert && styles.switchThumbOn]} />
         </Pressable>
 
         <Pressable

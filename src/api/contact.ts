@@ -13,7 +13,7 @@ export type ApiContact = {
   name: string;
   phone: string | null;
   alias: string | null;
-  alertEnabled: boolean;
+  receivesAlert: boolean;
 };
 
 export const contactApi = {
